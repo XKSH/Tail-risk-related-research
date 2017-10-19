@@ -1,5 +1,5 @@
 require(StableEstim)
-theta <- c(1.45,0.55,1,0)
+theta <- c(1.45,0,1,0)
 #theta <- c(2,0,1,0)
 pm <- 0
 # set.seed(2345)
@@ -18,8 +18,9 @@ objKout@par
 ML <- MLParametersEstim(x=x,pm=pm,PrintTime=TRUE)
 ML$Estim$par
 #McCulloch good
+#principle is simple use x~S(a,b,1,0);y=cx+mu;y~S(a,b,c,mu)
 McCullochParametersEstim(x+y)
-McCullochParametersEstim(a*b)
+vtest=McCullochParametersEstim(a*b)
 # Kogon regression with the McCulloch initialisation bad and long for the reason of Kogon regression
 IGParametersEstim(x,pm=0)
 
@@ -54,3 +55,63 @@ twoS <- CgmmParametersEstim(x=x,type="2S",alphaReg=alphaReg,
                             s_min=0,s_max=1,theta0=NULL,
                             pm=pm,PrintTime=TRUE)
 twoS$Estim$par
+
+
+#svd
+hilbert <- function(n) { i <- 1:n; 1 / outer(i - 1, i, "+") }
+X <- hilbert(9)[, 1:6]
+s <- svd(X)
+D <- diag(s$d)
+s$u %*% D %*% t(s$v)
+#x is the vector of parameters(alpha(a),beta(b),gamma(c),delta(mu))
+tail.amplitude=function(x){
+  amph=x[3]*(sin(pi*x[1]/2)*gamma(x[1])/pi)^(1/x[1])
+  return(as.numeric(amph))
+}
+tail.amplitude(vtest)
+
+#simulation 
+theta <- c(1.45,0,1,0)
+set.seed(2345)
+nb=120;M=2;nv=3
+set.seed(2345)
+a=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
+theta <- c(1.45,0,0.2,1)
+set.seed(1234)
+b=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
+theta <- c(1.45,0,0.3,4)
+set.seed(1234)
+c=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
+# rab=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
+# ind=seq(1,nb,nb/M)
+# a =rab[ind[1]:(nb/M)]
+# b=rab[ind[2]:(2*nb/M)]
+x<-0.5*a+b+0.3*c;y=-2*a+b+0.6*c;z=0.4*a-0.7*b-0.1*c
+C.matrix=matrix(0,nrow=nv,ncol=nv)
+data=rbind(x,y,z)
+eta=matrix(0,nrow=(nv*(nv+1)/2),ncol=(nb))
+idx=0
+for(i in 1:nv){
+  for(j in i:nv){
+    idx=idx+1
+    eta[idx,]=data[i,]*data[j,]
+  }
+}
+
+spara=apply(eta,1,McCullochParametersEstim)
+tcor=apply(spara,2,function(x){tail.amplitude(x)})
+tcor=spara[2,]*tcor^spara[1,]
+C.matrix[lower.tri(C.matrix, diag=TRUE)] <- tcor
+C.matrix[upper.tri(C.matrix)] <- t(C.matrix)[upper.tri(C.matrix)]
+s <- svd(C.matrix)
+A <- diag(s$d)
+s$u %*% A %*% t(s$v)
+A^(1/0.45)
+tail.amplitude(c(1.45,0,1,0))
+tail.amplitude(c(1.45,0,0.2,1))
+tail.amplitude(c(1.45,0,0.3,4))
+#shrinkage
+A=A[1:2,1:2]
+u=s$u[,1:2]
+v=s$v[,1:2]
+u %*% A %*% t(v)
