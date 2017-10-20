@@ -71,6 +71,7 @@ tail.amplitude=function(x){
 tail.amplitude(vtest)
 
 #simulation 
+pm = 0
 theta <- c(1.45,0,1,0)
 set.seed(2345)
 nb=120;M=2;nv=3
@@ -97,21 +98,34 @@ for(i in 1:nv){
     eta[idx,]=data[i,]*data[j,]
   }
 }
-
+#change sign of s1$u according to s$u,vice versa
 spara=apply(eta,1,McCullochParametersEstim)
 tcor=apply(spara,2,function(x){tail.amplitude(x)})
 tcor=spara[2,]*tcor^spara[1,]
 C.matrix[lower.tri(C.matrix, diag=TRUE)] <- tcor
 C.matrix[upper.tri(C.matrix)] <- t(C.matrix)[upper.tri(C.matrix)]
-s <- svd(C.matrix)
-A <- diag(s$d)
-s$u %*% A %*% t(s$v)
-A^(1/0.45)
-tail.amplitude(c(1.45,0,1,0))
-tail.amplitude(c(1.45,0,0.2,1))
-tail.amplitude(c(1.45,0,0.3,4))
+A.matrix=matrix(0,nrow=nv,ncol=nv)
+A.matrix[lower.tri(A.matrix, diag=TRUE)]=1/spara[2,]*tcor
+A.matrix[upper.tri(A.matrix)] <- t(A.matrix)[upper.tri(A.matrix)]
+s1=eigen(A.matrix)
+A1=diag(s1$values)
+s1$vectors
+s <- eigen(C.matrix)
+A <- diag(s$values)
+s$vectors %*% A %*% t(s$vectors)
+# tail.amplitude(c(1.45,0,1,0))
+# tail.amplitude(c(1.45,0,0.2,1))
+# tail.amplitude(c(1.45,0,0.3,4))
+#regulariation
+C.mod=nearPD(C.matrix, corr = FALSE,conv.norm.type = "F")
+eigen(C.mod$mat)$vectors
+
+A.mod=nearPD(A.matrix, corr = FALSE,conv.norm.type = "F")
+eigen(A.mod$mat)$vectors
+
 #shrinkage
 A=A[1:2,1:2]
 u=s$u[,1:2]
 v=s$v[,1:2]
 u %*% A %*% t(v)
+tt=matrix(c(-0.2223282,0.9550149,-0.1962567,-0.97479174,-0.21386781,0.06357381,0.01874094,0.20544367,0.97848949),nrow=3)
