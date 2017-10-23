@@ -87,7 +87,11 @@ c=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
 # ind=seq(1,nb,nb/M)
 # a =rab[ind[1]:(nb/M)]
 # b=rab[ind[2]:(2*nb/M)]
-x<-0.5*a+b+0.3*c;y=-2*a+b+0.6*c;z=0.4*a-0.7*b-0.1*c
+x<-0.5*a+0.5*b+0.3*c;y=-2*a+b+0.6*c;z=0.4*a-0.7*b-0.1*c
+d <- density(x+y+z)
+plot(d, main="Kernel Density of stable distributions")
+polygon(d, col="red", border="blue") 
+
 C.matrix=matrix(0,nrow=nv,ncol=nv)
 data=rbind(x,y,z)
 eta=matrix(0,nrow=(nv*(nv+1)/2),ncol=(nb))
@@ -98,12 +102,13 @@ for(i in 1:nv){
     eta[idx,]=data[i,]*data[j,]
   }
 }
-#change sign of s1$u according to s$u,vice versa
+#we can change sign of s1$u according to s$u,vice versa
 spara=apply(eta,1,McCullochParametersEstim)
 tcor=apply(spara,2,function(x){tail.amplitude(x)})
 tcor=spara[2,]*tcor^spara[1,]
 C.matrix[lower.tri(C.matrix, diag=TRUE)] <- tcor
 C.matrix[upper.tri(C.matrix)] <- t(C.matrix)[upper.tri(C.matrix)]
+
 A.matrix=matrix(0,nrow=nv,ncol=nv)
 A.matrix[lower.tri(A.matrix, diag=TRUE)]=1/spara[2,]*tcor
 A.matrix[upper.tri(A.matrix)] <- t(A.matrix)[upper.tri(A.matrix)]
@@ -118,8 +123,39 @@ s$vectors %*% A %*% t(s$vectors)
 # tail.amplitude(c(1.45,0,0.3,4))
 #regulariation
 C.mod=nearPD(C.matrix, corr = FALSE,conv.norm.type = "F")
-eigen(C.mod$mat)$vectors
+s.mod=eigen(C.mod$mat)
+v=s.mod$vectors
+sign.v=v/abs(v)
+# abs(v)%*%diag(s.mod$values)%*%abs(v)
+#parameters of factors a,b,c
+alpha=1.7#fixed before
 
+rpara=apply(rbind(x,y,z),1,McCullochParametersEstim)
+mu=solve(v)%*%rpara[4,]
+c=(solve(abs(v)^(alpha))%*%(rpara[3,]^alpha))^(1/alpha)
+cinv=t(matrix(rep(c,3),nrow=3))
+cinv=abs(v)*cinv
+cinv=cinv^alpha
+cinv=cinv/rowSums(cinv)
+# b=solve(cinv)%*%rpara[2,] normally it should be constrained b in -1 to 1
+require(limSolve)
+ineq=as.matrix(rbind(diag(3),-diag(3)))
+b=lsei(cinv,rpara[2,],G=ineq,H=rep(-1,6),type=2)$X
+b[b>1]=1
+b[b<-1]=1
+fpara=cbind(rep(alpha,3),b,c,mu)
+
+random=matrix(0,nrow=3,ncol=1000)
+for(i in 1:3){
+  set.seed(2345)
+  random[i,]=rstable(dim(random)[2],fpara[i,1],fpara[i,2],fpara[i,3],fpara[i,4],pm)
+}
+rport=v%*%random
+d <- density(colSums(rport[1]))
+plot(d, main="Kernel Density of stable distributions")
+polygon(d, col="red", border="blue") 
+max(colSums(rport));min(colSums(rport))
+max(x+y+z);min(x+y+z)
 A.mod=nearPD(A.matrix, corr = FALSE,conv.norm.type = "F")
 eigen(A.mod$mat)$vectors
 
@@ -129,3 +165,10 @@ u=s$u[,1:2]
 v=s$v[,1:2]
 u %*% A %*% t(v)
 tt=matrix(c(-0.2223282,0.9550149,-0.1962567,-0.97479174,-0.21386781,0.06357381,0.01874094,0.20544367,0.97848949),nrow=3)
+
+
+#normal distribution
+xtest=x+y+z
+exp=function(x) dnorm(x,mean=mean(xtest),sd=sd(xtest))
+curve(exp, -20, 20, xname = "t")
+qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
