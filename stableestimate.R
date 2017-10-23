@@ -151,7 +151,7 @@ for(i in 1:3){
   random[i,]=rstable(dim(random)[2],fpara[i,1],fpara[i,2],fpara[i,3],fpara[i,4],pm)
 }
 rport=v%*%random
-d <- density(colSums(rport[1]))
+d <- density(colSums(rport))
 plot(d, main="Kernel Density of stable distributions")
 polygon(d, col="red", border="blue") 
 max(colSums(rport));min(colSums(rport))
