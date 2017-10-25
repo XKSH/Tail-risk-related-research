@@ -74,7 +74,7 @@ tail.amplitude(vtest)
 pm = 0
 theta <- c(1.45,0,1,0)
 set.seed(2345)
-nb=120;M=2;nv=3
+nb=1200;M=2;nv=3
 set.seed(2345)
 a=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
 theta <- c(1.45,0,0.2,1)
@@ -91,6 +91,8 @@ x<-0.5*a+0.5*b+0.3*c;y=-2*a+b+0.6*c;z=0.4*a-0.7*b-0.1*c
 d <- density(x+y+z)
 plot(d, main="Kernel Density of stable distributions")
 polygon(d, col="red", border="blue") 
+
+
 
 C.matrix=matrix(0,nrow=nv,ncol=nv)
 data=rbind(x,y,z)
@@ -126,10 +128,11 @@ C.mod=nearPD(C.matrix, corr = FALSE,conv.norm.type = "F")
 s.mod=eigen(C.mod$mat)
 v=s.mod$vectors
 sign.v=v/abs(v)
+
 # abs(v)%*%diag(s.mod$values)%*%abs(v)
 #parameters of factors a,b,c
 alpha=1.7#fixed before
-
+v=sign.v*abs(v)^(2/alpha)
 rpara=apply(rbind(x,y,z),1,McCullochParametersEstim)
 mu=solve(v)%*%rpara[4,]
 c=(solve(abs(v)^(alpha))%*%(rpara[3,]^alpha))^(1/alpha)
@@ -145,15 +148,26 @@ b[b>1]=1
 b[b<-1]=1
 fpara=cbind(rep(alpha,3),b,c,mu)
 
-random=matrix(0,nrow=3,ncol=1000)
+random=matrix(0,nrow=3,ncol=6000)
 for(i in 1:3){
   set.seed(2345)
   random[i,]=rstable(dim(random)[2],fpara[i,1],fpara[i,2],fpara[i,3],fpara[i,4],pm)
 }
 rport=v%*%random
+# rport=v[,1]%*%t(random[1,])
 d <- density(colSums(rport))
 plot(d, main="Kernel Density of stable distributions")
 polygon(d, col="red", border="blue") 
+#reconstruire A matrix
+fcor=apply(fpara,1,function(x){tail.amplitude(x)})
+A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
+
+###use last ten quantile to identify best alpha
+ms=x+y+z
+mr=colSums(rport)
+plot(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
+abline(0, 1)
+
 max(colSums(rport));min(colSums(rport))
 max(x+y+z);min(x+y+z)
 A.mod=nearPD(A.matrix, corr = FALSE,conv.norm.type = "F")
@@ -170,5 +184,5 @@ tt=matrix(c(-0.2223282,0.9550149,-0.1962567,-0.97479174,-0.21386781,0.06357381,0
 #normal distribution
 xtest=x+y+z
 exp=function(x) dnorm(x,mean=mean(xtest),sd=sd(xtest))
-curve(exp, -20, 20, xname = "t")
+curve(exp, -200, 200, xname = "t")
 qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
