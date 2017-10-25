@@ -165,7 +165,7 @@ A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
 ###use last ten quantile to identify best alpha
 ms=x+y+z
 mr=colSums(rport)
-plot(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
+plot(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
 abline(0, 1)
 
 max(colSums(rport));min(colSums(rport))
@@ -186,3 +186,7 @@ xtest=x+y+z
 exp=function(x) dnorm(x,mean=mean(xtest),sd=sd(xtest))
 curve(exp, -200, 200, xname = "t")
 qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
+
+ad.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
+ks.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
+ks.test(sort(ms),sort(mr))
