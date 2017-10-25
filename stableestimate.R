@@ -186,7 +186,14 @@ xtest=x+y+z
 exp=function(x) dnorm(x,mean=mean(xtest),sd=sd(xtest))
 curve(exp, -200, 200, xname = "t")
 qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
-
-ad.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
+#whether quantile instead of sample follow same distribution
+#put more weight in tail
+require(kSamples)
+ad.test(sort(ms)[seq(120,1200,120)],sort(mr)[seq(600,6000,600)])
 ks.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
 ks.test(sort(ms),sort(mr))
+
+ad.test(rnorm(30),runif(30))
+ad.test(sort(rnorm(30))[seq(3,30,3)],sort(runif(30))[seq(3,30,3)])
+ad.test(sort(rnorm(30,0,1)),sort(rnorm(30,0,2)))
+ad.test(sort(rnorm(300,0,1))[seq(10,300,10)],sort(rnorm(300,0,2))[seq(10,300,10)])
