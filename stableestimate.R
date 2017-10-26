@@ -165,8 +165,11 @@ A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
 ###use last ten quantile to identify best alpha
 ms=x+y+z
 mr=colSums(rport)
-plot(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
+plot(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
 abline(0, 1)
+plot(sort(x)[seq(12,120,12)],sort(rport[1,])[seq(60,600,60)])
+abline(0, 1)
+
 
 max(colSums(rport));min(colSums(rport))
 max(x+y+z);min(x+y+z)
@@ -189,9 +192,13 @@ qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
 #whether quantile instead of sample follow same distribution
 #put more weight in tail
 require(kSamples)
-ad.test(sort(ms)[seq(120,1200,120)],sort(mr)[seq(600,6000,600)])
+ad.test(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
 ks.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
 ks.test(sort(ms),sort(mr))
+
+ad.test(sort(z)[seq(12,1200,12)],sort(rport[3,])[seq(60,6000,60)])
+ks.test(sort(z)[seq(12,1200,12)],sort(rport[3,])[seq(60,6000,60)])
+ks.test(sort(x),sort(rport[1,]))
 
 ad.test(rnorm(30),runif(30))
 ad.test(sort(rnorm(30))[seq(3,30,3)],sort(runif(30))[seq(3,30,3)])
