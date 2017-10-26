@@ -126,13 +126,13 @@ s$vectors %*% A %*% t(s$vectors)
 #regulariation
 C.mod=nearPD(C.matrix, corr = FALSE,conv.norm.type = "F")
 s.mod=eigen(C.mod$mat)
-v=s.mod$vectors
-sign.v=v/abs(v)
+s.v=s.mod$vectors
+sign.v=s.v/abs(s.v)
 
 # abs(v)%*%diag(s.mod$values)%*%abs(v)
 #parameters of factors a,b,c
-alpha=1.7#fixed before
-v=sign.v*abs(v)^(2/alpha)
+alpha=1.55#fixed before
+v=sign.v*abs(s.v)^(2/alpha)
 rpara=apply(rbind(x,y,z),1,McCullochParametersEstim)
 mu=solve(v)%*%rpara[4,]
 c=(solve(abs(v)^(alpha))%*%(rpara[3,]^alpha))^(1/alpha)
