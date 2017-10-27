@@ -131,22 +131,36 @@ sign.v=s.v/abs(s.v)
 
 # abs(v)%*%diag(s.mod$values)%*%abs(v)
 #parameters of factors a,b,c
-alpha=1.55#fixed before
+alpha=1.85#fixed before
 v=sign.v*abs(s.v)^(2/alpha)
 rpara=apply(rbind(x,y,z),1,McCullochParametersEstim)
 mu=solve(v)%*%rpara[4,]
-c=(solve(abs(v)^(alpha))%*%(rpara[3,]^alpha))^(1/alpha)
+# c=(solve(abs(v)^(alpha))%*%(rpara[3,]^alpha))^(1/alpha)#c may be calculated negative so change it to constrained optimisation
+require(limSolve)#optimization using limsolve
+ineq=as.matrix(rbind(diag(3)))
+c=lsei(abs(v)^(alpha),rpara[3,]^alpha,G=ineq,H=rep(0,3),type=2)$X
 cinv=t(matrix(rep(c,3),nrow=3))
 cinv=abs(v)*cinv
 cinv=cinv^alpha
 cinv=cinv/rowSums(cinv)
 # b=solve(cinv)%*%rpara[2,] normally it should be constrained b in -1 to 1
-require(limSolve)
 ineq=as.matrix(rbind(diag(3),-diag(3)))
 b=lsei(cinv,rpara[2,],G=ineq,H=rep(-1,6),type=2)$X
 b[b>1]=1
 b[b<-1]=1
 fpara=cbind(rep(alpha,3),b,c,mu)
+
+# #constrOptim
+# d = as.vector(rpara[2,])
+# D= cinv
+# start <- rep(1/(ncol(R)+1), ncol(R))
+# min_fn <- function(b, dvec, Dmat){t(Dmat%*%b-dvec)%*%(Dmat%*%b-dvec)/2}
+# grad_min_fn <- function(b, dvec, Dmat){(Dmat%*%b-dvec)%*%t(b)}
+# cond=rep(-1,6)
+# 
+# constrOptim(theta=start, f=min_fn, grad=grad_min_fn, ui=ineq, ci=cond, control=list(reltol=10*.Machine$double.eps), 
+#             dvec=d, Dmat=D )
+
 
 random=matrix(0,nrow=3,ncol=6000)
 for(i in 1:3){
@@ -158,6 +172,15 @@ rport=v%*%random
 d <- density(colSums(rport))
 plot(d, main="Kernel Density of stable distributions")
 polygon(d, col="red", border="blue") 
+#plot of factors
+library(ggplot2)
+#Sample data
+sample=as.vector(t(rport))
+dat <- data.frame(dens = sample
+                  , factors = rep(c("a", "b","c"), each = 6000))
+#Plot of factors
+ggplot(dat, aes(x = dens,fill = factors,colour = factors)) + geom_density(adjust = 6,alpha = 0.5)+
+  xlim(-100, 50)
 #reconstruire A matrix
 fcor=apply(fpara,1,function(x){tail.amplitude(x)})
 A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
@@ -165,9 +188,9 @@ A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
 ###use last ten quantile to identify best alpha
 ms=x+y+z
 mr=colSums(rport)
-plot(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
+plot(sort(ms)[seq(2,120,1)],sort(mr)[seq(10,600,5)])
 abline(0, 1)
-plot(sort(x)[seq(12,120,12)],sort(rport[1,])[seq(60,600,60)])
+plot(sort(z)[seq(12,120,12)],sort(rport[3,])[seq(60,600,60)])
 abline(0, 1)
 
 
@@ -192,7 +215,7 @@ qnorm(0.001,mean=mean(xtest),sd=sd(xtest))
 #whether quantile instead of sample follow same distribution
 #put more weight in tail
 require(kSamples)
-ad.test(sort(ms)[seq(12,120,12)],sort(mr)[seq(60,600,60)])
+ad.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
 ks.test(sort(ms)[seq(12,1200,12)],sort(mr)[seq(60,6000,60)])
 ks.test(sort(ms),sort(mr))
 
