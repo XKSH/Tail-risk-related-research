@@ -131,7 +131,7 @@ sign.v=s.v/abs(s.v)
 
 # abs(v)%*%diag(s.mod$values)%*%abs(v)
 #parameters of factors a,b,c
-alpha=1.85#fixed before
+alpha=1.8#fixed before
 v=sign.v*abs(s.v)^(2/alpha)
 rpara=apply(rbind(x,y,z),1,McCullochParametersEstim)
 mu=solve(v)%*%rpara[4,]
@@ -153,12 +153,12 @@ fpara=cbind(rep(alpha,3),b,c,mu)
 # #constrOptim
 # d = as.vector(rpara[2,])
 # D= cinv
-# start <- rep(1/(ncol(R)+1), ncol(R))
+# start <- rep(1/(ncol(cinv)+1), ncol(cinv))
 # min_fn <- function(b, dvec, Dmat){t(Dmat%*%b-dvec)%*%(Dmat%*%b-dvec)/2}
 # grad_min_fn <- function(b, dvec, Dmat){(Dmat%*%b-dvec)%*%t(b)}
 # cond=rep(-1,6)
 # 
-# constrOptim(theta=start, f=min_fn, grad=grad_min_fn, ui=ineq, ci=cond, control=list(reltol=10*.Machine$double.eps), 
+# constrOptim(theta=start, f=min_fn, grad=grad_min_fn, ui=ineq, ci=cond, control=list(reltol=10*.Machine$double.eps),
 #             dvec=d, Dmat=D )
 
 
@@ -169,18 +169,39 @@ for(i in 1:3){
 }
 rport=v%*%random
 # rport=v[,1]%*%t(random[1,])
+# rport=v[,1:2]%*%random[1:2,]
 d <- density(colSums(rport))
 plot(d, main="Kernel Density of stable distributions")
 polygon(d, col="red", border="blue") 
-#plot of factors
+
+#plot of reconstructed individuals
 library(ggplot2)
+#Sample data
+sample=as.vector(cbind(x,y,z))
+dat <- data.frame(dens = sample
+                  , individuals = rep(c("x", "y","z"), each = 6000))
+#Plot of factors
+ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_density(adjust = 3,alpha = 0.5)+
+  xlim(-100, 50)
+
 #Sample data
 sample=as.vector(t(rport))
 dat <- data.frame(dens = sample
+                  , individuals = rep(c("x", "y","z"), each = 6000))
+#Plot of factors
+ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_density(adjust = 10,alpha = 0.5)+
+  xlim(-100, 50)
+
+#plot of factors
+#Sample data
+sample=as.vector(t(random))
+dat <- data.frame(dens = sample
                   , factors = rep(c("a", "b","c"), each = 6000))
 #Plot of factors
-ggplot(dat, aes(x = dens,fill = factors,colour = factors)) + geom_density(adjust = 6,alpha = 0.5)+
+ggplot(dat, aes(x = dens,fill = factors,colour = factors)) + geom_density(adjust = 10,alpha = 0.5)+
   xlim(-100, 50)
+
+
 #reconstruire A matrix
 fcor=apply(fpara,1,function(x){tail.amplitude(x)})
 A.left=abs(v)^(alpha/2)%*%diag(fcor)^alpha%*%t(abs(v)^(alpha/2))
