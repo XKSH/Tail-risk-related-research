@@ -77,10 +77,10 @@ set.seed(2345)
 nb=1200;M=2;nv=3
 set.seed(2345)
 a=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
-theta <- c(1.45,0,0.2,1)
+theta <- c(1.45,0,2,1)
 set.seed(1234)
 b=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
-theta <- c(1.45,0,0.3,4)
+theta <- c(1.45,0.4,6,4)
 set.seed(1234)
 c=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
 # rab=rstable(nb,theta[1],theta[2],theta[3],theta[4],pm)
@@ -179,8 +179,8 @@ library(ggplot2)
 #Sample data
 sample=as.vector(cbind(x,y,z))
 dat <- data.frame(dens = sample
-                  , individuals = rep(c("x", "y","z"), each = 6000))
-#Plot of factors
+                  , individuals = rep(c("x", "y","z"), each = 1200))
+#
 ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_density(adjust = 3,alpha = 0.5)+
   xlim(-100, 50)
 
@@ -188,8 +188,8 @@ ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_densit
 sample=as.vector(t(rport))
 dat <- data.frame(dens = sample
                   , individuals = rep(c("x", "y","z"), each = 6000))
-#Plot of factors
-ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_density(adjust = 10,alpha = 0.5)+
+#
+ggplot(dat, aes(x = dens,fill = individuals,colour = individuals)) + geom_density(adjust = 1,alpha = 0.5)+
   xlim(-100, 50)
 
 #plot of factors
